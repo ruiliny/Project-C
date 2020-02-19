@@ -1,18 +1,21 @@
 /***************************************************************************
  *
  *   File        : tasks.h
- *   Student Id  : <INSERT STUDENT ID HERE>
- *   Name        : <INSERT STUDENT NAME HERE>
+ *   Student Id  : <854255>
+ *   Name        : <Ce ZHANG>
  *
  ***************************************************************************/
 
 #include <stdio.h>
 #include <stdlib.h>
 #include <math.h>
- //#include <sys/time.h>
+//#include <sys/time.h>
 #include <string.h>
 #include <stdint.h>
 #include <assert.h>
+
+//struct timeval start;
+//struct timeval stop;
 
 typedef struct
 {
@@ -118,7 +121,7 @@ void no_free(void* v);
 
 int make_unique(double* array, int n);
 
-void bst_print(node_t* n, double VU, FILE* fp3);
+void bst_process_all(node_t* n, double VU, FILE* fp3);
 
 void binary_search_recursive(FILE* fp3, double* A, int lo, int hi, double x);
 
@@ -149,4 +152,3 @@ void searching(FILE* fp3, int line_num);
 void vortcalc(FILE* fp4, int line_num);
 
 #endif
-
