@@ -14,7 +14,7 @@
 #include <stdbool.h>
 #include "tasks.h"
 
-
+//second revise 
 #define GRID_X_LEFT 10
 #define GRID_X_RIGHT 70
 #define GRID_Y_DOWN (-20)
