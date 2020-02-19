@@ -8,399 +8,282 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <math.h>
-//#include <sys/time.h>
 #include <string.h>
-#include <float.h>
-#include <stdbool.h>
 #include "tasks.h"
+#include <stdbool.h>
+#include<float.h>
+#define X_LEFT 10
+#define X_RIGHT 70
+#define Y_DOWN -20
+#define Y_UP   20
+#define R 24
 
-//second revise 
-#define GRID_X_LEFT 10
-#define GRID_X_RIGHT 70
-#define GRID_Y_DOWN (-20)
-#define GRID_Y_UP 20
+typedef struct data {
+	float x;
+	float y;
+	float u;
+	float v;
+}flow_data;
 
-typedef struct square {
-	float   x_left;  // left barrier
-	float   x_right;  // right barrier
-	float   y_down;  // bottom barrier
-	float   y_up;  // top barrier
-	point_t accu;
-	int     n;
-	float   score;
-} square_t;
 
-typedef struct grid {
-	square_t *squares;  // 1d array, reso * reso
-	int      resolution;
-	float    dx;
-	float    dy;
-} grid_t;
-
-/**
- * from L2/file_io.c
- */
-void *safe_malloc(size_t num_bytes) {
-	void *ptr = malloc(num_bytes);
-	if (ptr == NULL) {
-		printf("ERROR: malloc(%lu)\n", num_bytes);
-		exit(EXIT_FAILURE);
-	}
-	return ptr;
-}
-
-/**
- * from L2/file_io.c
- */
-FILE *safe_fopen(const char *path, const char *mode) {
-	FILE *fp = fopen(path, mode);
-	if (fp == NULL) {
-		perror("file open error.");
-		exit(EXIT_FAILURE);
-	}
-	return fp;
-}
-
-bool read_data(FILE *fp, point_t *point) {
-	int count = fscanf(fp, "%f,%f,%f,%f",
-		&(point->x),
-		&(point->y),
-		&(point->u),
-		&(point->v));
-	// it returns the number of values that are successfully read
-	// in this case , it is 4
+//haha
+bool read_data(FILE * fp, flow_data *point)
+{
+	int count = fscanf(fp, "%f,%f,%f,%f", &(point->x), &(point->y), &(point->u), &(point->v));
 	return count == 4;
 }
 
-void write_data(FILE *fp, point_t *point) {
+void write_data(FILE * fp, flow_data *point)
+{
 	fprintf(fp, "%f,%f,%f,%f\n", point->x, point->y, point->u, point->v);
 }
 
-void add_point(point_t *p1, point_t *p2) {
-	p1->x += p2->x;
-	p1->y += p2->y;
-	p1->u += p2->u;
-	p1->v += p2->v;
-}
 
-void maxveldiff(const char *flow_file) {
-	point_t max_u_p;  // max u point
-	point_t min_u_p;  // min u point
-	point_t max_v_p;  // max v point
-	point_t min_v_p;  // min v point
 
-	max_u_p.u = FLT_MIN;
-	min_u_p.u = FLT_MAX;
-	max_v_p.v = FLT_MIN;
-	min_v_p.v = FLT_MAX;
 
-	char line[MAX_BUF_LEN];
-	FILE *fp = safe_fopen(flow_file, "r");
-	fgets(line, MAX_BUF_LEN, fp);  // the header, x,y,u,v
-	while (!feof(fp)) {
-		point_t curr_p;  // current point
-		if (!read_data(fp, &curr_p)) {
+void maxveldiff(const char* flow_file)
+{
+	flow_data max_u;
+	flow_data min_u;
+	flow_data max_v;
+	flow_data min_v;
+
+	//max_u.u = FLT_MIN;
+	//min_u.u = FLT_MAX;
+	//max_v.v = FLT_MIN;
+	//min_v.v = FLT_MAX;
+
+	FILE *fp;
+	if ((fp = fopen("flow_data.csv", "r")) == NULL)
+	{
+		printf("read error\n");
+		exit(0);
+	}
+
+
+	char buffer[8];//can't use char buffer * why?
+	fgets(buffer, 8, fp);
+
+	read_data(fp, &max_u);
+	read_data(fp, &min_u);
+	read_data(fp, &max_v);
+	read_data(fp, &min_v);
+
+	while (!feof(fp))
+	{
+		flow_data current;
+		read_data(fp, &current);
+		if (!read_data(fp, &current)) {
 			break;
 		}
-		if (curr_p.x <= 20.0) {
-			continue;
-		}
-		if (curr_p.u > max_u_p.u) {
-			max_u_p = curr_p;
-		}
-		if (curr_p.u < min_u_p.u) {
-			min_u_p = curr_p;
-		}
-		if (curr_p.v > max_v_p.v) {
-			max_v_p = curr_p;
-		}
-		if (curr_p.v < min_v_p.v) {
-			min_v_p = curr_p;
-		}
+
+		if (current.x < 10)
+
+			if (current.x <= 20.0)
+				continue;
+		if (current.u > max_u.u)
+			max_u = current;
+		if (current.u < min_u.u)
+			min_u = current;
+		if (current.v > max_v.v)
+			max_v = current;
+		if (current.v < min_v.v)
+			min_v = current;
+
 	}
 	fclose(fp);
-
-	fp = safe_fopen("task1.csv", "w");
+	FILE *out = fopen("task1.csv", "w");
 	fprintf(fp, "x,y,u,v\n");
-	write_data(fp, &max_u_p);
-	write_data(fp, &min_u_p);
-	write_data(fp, &max_v_p);
-	write_data(fp, &min_v_p);
-	fclose(fp);
+	write_data(fp, &max_u);
+	write_data(fp, &min_u);
+	write_data(fp, &max_v);
+	write_data(fp, &min_u);
+	fclose(out);
 }
 
-void grid_init(grid_t *grid, int resolution) {
-	grid->dx = 1.0 * (GRID_X_RIGHT - GRID_X_LEFT) / resolution;
-	grid->dy = 1.0 * (GRID_Y_UP - GRID_Y_DOWN) / resolution;
-	grid->resolution = resolution;
 
-	grid->squares = safe_malloc(sizeof(*grid->squares) * grid->resolution * grid->resolution);
+typedef struct grid
+{
+	float x_left;
+	float x_right;
+	float y_down;
+	float y_up;
+	float average_x;
+	float average_y;
+	float average_u;
+	float average_v;
+	int count;
+	float score;
+}grid;
 
-	float y = GRID_Y_DOWN;
 
-	for (int r = 0; r < grid->resolution; ++r) {
-		float x = GRID_X_LEFT;
-
-		for (int c = 0; c < grid->resolution; ++c) {
-			int index = r * grid->resolution + c;
-
-			square_t *square = &grid->squares[index];
-			square->x_left = x;
-			square->x_right = x + grid->dx;
-			square->y_down = y;
-			square->y_up = y + grid->dy;
-			square->n = 0;
-			square->accu.x = 0;
-			square->accu.y = 0;
-			square->accu.u = 0;
-			square->accu.v = 0;
-			x += grid->dx;
-		}
-		y += grid->dy;
+void create_grid(grid cells[])
+{
+	float xd = 1.0*(X_RIGHT - X_LEFT) / R;
+	float yd = 1.0*(Y_UP - Y_DOWN) / R;
+	for (int i = 0; i < R*R; i++)
+	{
+		cells[i].x_left = X_LEFT + i % R*xd;
+		cells[i].x_right = X_LEFT + (i % R + 1)*xd;
+		cells[i].y_down = Y_DOWN + i / R * yd;
+		cells[i].y_up = Y_DOWN + (i / R + 1)* yd;
 	}
 }
-
-void grid_destroy(grid_t *grid) {
-	free(grid->squares);
-	free(grid);
+int get_index(float x, float y)
+{
+	float xd = 1.0*(X_RIGHT - X_LEFT) / R;
+	float yd = 1.0*(Y_UP - Y_DOWN) / R;
+	int row = (int)((x - X_LEFT) / xd);
+	int column = (int)((y - Y_DOWN) / yd);
+	int index = column * R + row;
+	return index;
 }
 
-bool grid_add_with_check(square_t *square, point_t *point) {
-	float x = point->x;
-	float y = point->y;
-	if ((square->x_left <= x || fabs(square->x_left - x) <= FLT_EPSILON) &&
-		(x <= square->x_right || fabs(square->x_right - x) <= FLT_EPSILON) &&
-		(square->y_down <= y || fabs(square->y_down - y) <= FLT_EPSILON) &&
-		(y <= square->y_up || fabs(square->y_up - y) <= FLT_EPSILON)) {
-		square->n += 1;
-		add_point(&square->accu, point);
-		return true;
+float get_score(float x, float y, float u, float v)
+{
+	float score = 100 * sqrt(u*u + v * v) / sqrt(x*x + y * y);
+	return score;
+}
+
+void output_score(FILE * fp, grid *point)
+{
+	fprintf(fp, "%0.6f,%0.6f,%0.6f,%0.6f,%0.6f\n", point->average_x, point->average_y, point->average_u, point->average_v, point->score);
+}
+
+
+void coarsegrid(const char* flow_file, int resolution)
+{
+	grid cell[R*R];
+	FILE *fp;
+	create_grid(cell);
+	if ((fp = fopen("flow_data.csv", "r")) == NULL)
+	{
+		printf("read error\n");
+		exit(0);
 	}
-	return false;
-}
+	char buffer[8];//can't use char buffer * why?
+	fgets(buffer, 8, fp);
+	for (int i = 0; i < R*R; i++)
+	{
+		cell[i].average_x = 0;
+		cell[i].average_y = 0;
+		cell[i].average_u = 0;
+		cell[i].average_v = 0;
+		cell[i].count = 0;
+		cell[i].score = 0;
+	}
+	//int max = 0;
+	//float x, y,u,v = 0;
 
-void grid_handle_adding(const char *flow_file, grid_t *grid) {
-	char line[MAX_BUF_LEN];
-	FILE *fp = safe_fopen(flow_file, "r");
-	fgets(line, MAX_BUF_LEN, fp);  // header
+	while (!feof(fp))
+	{
+		flow_data current;
+		float xd = 1.0*(X_RIGHT - X_LEFT) / R;
+		float yd = 1.0*(Y_UP - Y_DOWN) / R;
 
-	point_t curr_p;
-	while (!feof(fp)) {
-		if (!read_data(fp, &curr_p)) {
+		if (!read_data(fp, &current))
 			break;
-		}
-		int      idx_c = (int)((curr_p.x - GRID_X_LEFT) / grid->dx);
-		int      idx_r = (int)((curr_p.y - GRID_Y_DOWN) / grid->dy);
-		for (int row = -1; row <= 1; ++row) {
-			for (int col = -1; col <= 1; ++col) {
-				int new_r = idx_r + row;
-				int new_c = idx_c + col;
-				if (new_r >= grid->resolution || new_r < 0 || new_c >= grid->resolution || new_c < 0) {
-					continue;
-				}
-				int index = new_r * grid->resolution + new_c;
-				grid_add_with_check(&grid->squares[index], &curr_p);
+
+		//bool outside_thresh = (current.x <= X_LEFT) || (current.x >= X_RIGHT)
+			//|| (current.y <= Y_DOWN) || (current.y >= Y_UP);
+		bool within_thresh = (current.x < 70) && (current.x > 10) && (current.y < 20) && (current.y > -20);
+		/*bool outside_thresh = (current.x < X_LEFT)||(current.x-X_LEFT) <=FLT_EPSILON
+			|| (current.x > X_RIGHT)|| (current.x - X_RIGHT) >= FLT_EPSILON
+			|| (current.y < Y_DOWN) || (current.y - Y_DOWN) <= FLT_EPSILON
+			|| (current.y > Y_UP) || (current.y - Y_UP) >= FLT_EPSILON;*/
+
+			//if (outside_thresh)
+				//continue;
+		if (within_thresh)
+		{
+			int i = get_index(current.x, current.y);
+
+			if ((current.x < cell[i].x_right || fabs(current.x - cell[i].x_right) <= FLT_EPSILON)
+				&& (current.x > cell[i].x_left || fabs(current.x - cell[i].x_left) >= FLT_EPSILON)
+				&& (current.y < cell[i].y_up || fabs(current.y - cell[i].y_up) <= FLT_EPSILON)
+				&& (current.y > cell[i].y_down || fabs(current.y - cell[i].y_down) >= FLT_EPSILON))
+
+			{
+				cell[i].count += 1;
+				cell[i].average_x = ((cell[i].average_x)*(cell[i].count - 1) + current.x) / cell[i].count;
+				cell[i].average_y = ((cell[i].average_y)*(cell[i].count - 1) + current.y) / cell[i].count;
+				cell[i].average_u = ((cell[i].average_u)*(cell[i].count - 1) + current.u) / cell[i].count;
+				cell[i].average_v = ((cell[i].average_v)*(cell[i].count - 1) + current.v) / cell[i].count;
+				cell[i].score = get_score(cell[i].average_x, cell[i].average_y, cell[i].average_u, cell[i].average_v);
 			}
+			/*if (i > max)
+			{
+				max = i;
+				x = current.x;
+				y = current.y;
+				u = current.u;
+				v = current.v;
+			}*/
 		}
+	}
+	//printf("%f %f %f %f %d\n",x,y,u,v, max);
+	//bool test = (x < 70) && (x > 10) && (y < 20) && (y > -20);
+	//if (test) printf("true");
+	int m, n, k;
+	grid temp;
+	for (m = 0; m < R*R - 1; m++)
+	{
+		k = m;
+		for (n = m + 1; n < R*R; n++)
+			if (cell[n].score > cell[k].score)
+				k = n;
+		temp = cell[k]; cell[k] = cell[m]; cell[m] = temp;
 	}
 	fclose(fp);
-}
-
-void grid_handle_score(grid_t *grid) {
-	for (int row = 0; row < grid->resolution; ++row) {
-		for (int col = 0; col < grid->resolution; ++col) {
-			int      index = row * grid->resolution + col;
-			square_t *square = &grid->squares[index];
-			if (square->n > 0) {
-				float x_avg = square->accu.x / square->n;
-				float y_avg = square->accu.y / square->n;
-				float u_avg = square->accu.u / square->n;
-				float v_avg = square->accu.v / square->n;
-				square->score = 100 * sqrt(u_avg * u_avg + v_avg * v_avg) / sqrt(x_avg * x_avg + y_avg * y_avg);
-			}
-			else {
-				square->score = FLT_MIN;
-			}
-		}
-	}
-}
-
-int cmp_square(const void *a, const void *b) {
-	square_t *pa = (square_t *)a;
-	square_t *pb = (square_t *)b;
-	float    diff = pb->score - pa->score;
-	if (diff > 0) {
-		return 1;
-	}
-	if (diff < 0) {
-		return -1;
-	}
-	return 0;
-}
-
-void coarsegrid(const char *flow_file, int resolution) {
-	if (resolution < 1) {
-		printf("Invalid resolution: %d", resolution);
-		exit(EXIT_FAILURE);
-	}
-
-	grid_t *grid = safe_malloc(sizeof(*grid));
-	grid_init(grid, resolution);
-	grid_handle_adding(flow_file, grid);
-	grid_handle_score(grid);
-
-	qsort(grid->squares, grid->resolution * grid->resolution, sizeof(*grid->squares), cmp_square);
-
-	FILE *fp = safe_fopen("task2.csv", "w");
+	FILE *out = fopen("task2.csv", "w");
 	fprintf(fp, "x,y,u,v,S\n");
-
-	for (int i = 0; i < grid->resolution * grid->resolution; ++i) {
-		square_t *square = &grid->squares[i];
-
-		float x_avg = square->accu.x / square->n;
-		float y_avg = square->accu.y / square->n;
-		float u_avg = square->accu.u / square->n;
-		float v_avg = square->accu.v / square->n;
-		fprintf(fp, "%f,%f,%f,%f,%f\n", x_avg, y_avg, u_avg, v_avg, square->score);
-	}
-	fclose(fp);
-
-	grid_destroy(grid);
-}
-
-void velstat(const char *flow_file) {
-	// from 0.5 to 1.1, need 7 thresholds
-	int n = 7;
-
-	float *thres = calloc(n, sizeof(*thres));
-	int   *nums = calloc(n, sizeof(*nums));
-	int   total = 0;
-
-	float thr = 0.5;
-
-	for (int i = 0; i < n; ++i) {
-		thres[i] = thr;
-		thr += 0.1;
-	}
-
-	char line[MAX_BUF_LEN];
-	FILE *fp = safe_fopen(flow_file, "r");
-	fgets(line, MAX_BUF_LEN, fp);  // header
-	while (!feof(fp)) {
-		point_t curr_p;
-		if (!read_data(fp, &curr_p)) {
-			break;
-		}
-		total += 1;
-		int index = curr_p.u * 10;
-		index -= 4;
-		if (index >= n) {
-			// it is out of range
-			continue;
-		}
-		if (index <= 0) {
-			nums[0] += 1;
-		}
-		else {
-			nums[index] += 1;
-		}
-	}
-	fclose(fp);
-
-	for (int i = 1; i < n; ++i) {
-		nums[i] += nums[i - 1];
-	}
-	fp = safe_fopen("task3.csv", "w");
-	fprintf(fp, "threshold,points,percentage\n");
-	for (int i = 0; i < n; ++i) {
-		int num = nums[i];
-		fprintf(fp, "%f,%d,%f\n", thres[i], num, 100.0 * num / total);
+	for (int i = 0; i < R*R; i++)
+	{
+		output_score(fp, &(cell[i]));
 	}
 	fclose(fp);
 }
 
-void wakvis_part1(const char *flow_file, point_t *pts, int n) {
-	for (int i = 0; i < n; ++i) {
-		pts[i].u = FLT_MIN;
-	}
-
-	char buffer[MAX_BUF_LEN];
-	FILE *fp = safe_fopen(flow_file, "r");
-	fgets(buffer, MAX_BUF_LEN, fp);  // header
-
-	float   delta = 0.05;
-	point_t curr_p;
-	int     start = 10;
-	int     stop = start + (n - 1) * 5;
-	while (!feof(fp)) {
-		if (!read_data(fp, &curr_p)) {
-			break;
-		}
-		int number = round(curr_p.x);
-		if (number < start || number > stop) {
-			continue;
-		}
-		if (number % 5 != 0) {
-			continue;
-		}
-		int index = (number - start) / 5;
-		if (fabs(curr_p.x - number) > delta) {
-			continue;
-		}
-		if (curr_p.u > pts[index].u) {
-			pts[index] = curr_p;
-		}
-	}
-	fclose(fp);
+/*void velstat(const char* flow_file)
+{
+	printf("velstat() - IMPLEMENT ME!\n");
+	exit(EXIT_FAILURE);
 }
 
-void wakevis(const char *flow_file) {
-	int   n = 12; // Location in x for wake visualization
-	float *yheight;
-	yheight = (float *)calloc(n, sizeof(float));
-
-	point_t *pts = (point_t *)calloc(n, sizeof(point_t));
-
-	wakvis_part1(flow_file, pts, n);
-
-	FILE *fp = safe_fopen("task4_1.csv", "w");
-	fprintf(fp, "x,y_h\n");
-	for (int i = 0; i < n; ++i) {
-		yheight[i] = ceil(10 * fabs(pts[i].y));
-		if (pts[i].u != FLT_MIN) {
-			fprintf(fp, "%f,%f\n", pts[i].x, fabs(pts[i].y));
-		}
-		else {
-			fprintf(fp, "No points.");
-		}
-	}
-	fclose(fp);
-	free(pts);
-
+/*void wakevis(const char* flow_file)
+{
+	printf("wakevis() Part 1 - IMPLEMENT ME!\n");
+	int i,j;
+	int n = 12; // Location in x for wake visualization
+	float* yheight;
+	yheight = (float*) calloc(n,sizeof(float));
 	/* Task 4: Part 2, nothing is to be changed here
 	   Remember to output the spacing into the array yheight
 	   for this to work. You also need to initialize i,j and
 	   yheight so the skeleton as it stands will not compile */
 
-	FILE *ft42 = safe_fopen("task4_2.txt", "w");
-
-	for (int j = 11; j >= 0; j--) {
-		for (int i = 0; i < yheight[j] - yheight[0] + 4; i++) {
+	   /* FILE *ft42;
+		ft42 = fopen("task4_2.txt","w");
+		for (j = 11; j>=0; j--){
+		for (i=0;i<yheight[j]-yheight[0]+4;i++){
 			fprintf(ft42, " ");
 		}
-		fprintf(ft42, "*\n");
-	}
-	for (int i = 0; i < 5; i++) {
-		fprintf(ft42, "III\n");
-	}
-	for (int j = 0; j < 12; j++) {
-		for (int i = 0; i < yheight[j] - yheight[0] + 4; i++) {
-			fprintf(ft42, " ");
+			fprintf(ft42, "*\n");
 		}
-		fprintf(ft42, "*\n");
-	}
-	fclose(ft42);
+		for (i=0;i<5; i++){
+			fprintf(ft42, "III\n");
+		}
+		for(j = 0; j<12; j++ ){
+			for (i=0;i<yheight[j]-yheight[0]+4;i++){
+				fprintf(ft42, " ");
+			}
+			fprintf(ft42, "*\n");
+		}
+		fclose(ft42);
 
-	/* Cleanup */
-	free(yheight);
-}
+		/* Cleanup */
+		/*
+			free(yheight);
+
+			exit(EXIT_FAILURE);
+		}*/

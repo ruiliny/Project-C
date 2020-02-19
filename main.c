@@ -16,8 +16,8 @@
 int main(int argc, char *argv[]) {
 
 	/* TODO: Parse Command Line Arguments */
-	char* flow_file = "flow_data.csv";
-	int resolution = 24;
+	char* flow_file = NULL;
+	int resolution = 0;
 
 	/* TODO: Add timing for each task and output running time in ms */
 
